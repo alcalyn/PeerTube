@@ -48,6 +48,7 @@
 
     .comment-html {
       @include peertube-word-wrap;
+      margin-bottom: 10px;
 
       // Mentions
       ::ng-deep a {
@@ -61,10 +62,14 @@
         }
 
       }
+
+      &.comment-html-deleted {
+        color: $grey-foreground-color
+      }
     }
 
     .comment-actions {
-      margin: 10px 0;
+      margin-bottom: 10px;
       display: flex;
 
       .comment-action-reply,

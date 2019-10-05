@@ -8,9 +8,13 @@
       <a [href]="comment.account.url"  target="_blank" rel="noopener noreferrer" class="comment-account">{{ comment.by }}</a>
       <a [routerLink]="['/videos/watch', video.uuid, { 'threadId': comment.threadId }]" class="comment-date">{{ comment.createdAt | myFromNow }}</a>
     </div>
-    <div class="comment-html" [innerHTML]="sanitizedCommentHTML"></div>
 
-    <div class="comment-actions">
+    <div *ngIf="!comment.isDeleted" class="comment-html" [innerHTML]="sanitizedCommentHTML"></div>
+    <div *ngIf="comment.isDeleted" class="comment-html comment-html-deleted">
+      <i i18n>This comment has been deleted</i>
+    </div>
+
+    <div *ngIf="!comment.isDeleted" class="comment-actions">
       <div *ngIf="isUserLoggedIn()" (click)="onWantToReply()" class="comment-action-reply" i18n>Reply</div>
       <div *ngIf="isRemovableByUser()" (click)="onWantToDelete()" class="comment-action-delete" i18n>Delete</div>
     </div>

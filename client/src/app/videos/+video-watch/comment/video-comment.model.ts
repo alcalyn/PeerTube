@@ -12,6 +12,8 @@ export class VideoComment implements VideoCommentServerModel {
   videoId: number
   createdAt: Date | string
   updatedAt: Date | string
+  deletedAt: Date | string
+  isDeleted: boolean
   account: AccountInterface
   totalReplies: number
   by: string
@@ -28,6 +30,8 @@ export class VideoComment implements VideoCommentServerModel {
     this.videoId = hash.videoId
     this.createdAt = new Date(hash.createdAt.toString())
     this.updatedAt = new Date(hash.updatedAt.toString())
+    this.deletedAt = null === hash.deletedAt ? null : new Date(hash.deletedAt.toString())
+    this.isDeleted = hash.isDeleted
     this.account = hash.account
     this.totalReplies = hash.totalReplies
 

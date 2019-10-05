@@ -1,4 +1,4 @@
-import { AllowNull, BelongsTo, Column, CreatedAt, DataType, ForeignKey, Is, Model, Scopes, Table, UpdatedAt } from 'sequelize-typescript'
+import { AllowNull, BelongsTo, Column, CreatedAt, DataType, DeletedAt, ForeignKey, Is, Model, Scopes, Table, UpdatedAt } from 'sequelize-typescript'
 import { ActivityTagObject } from '../../../shared/models/activitypub/objects/common-objects'
 import { VideoCommentObject } from '../../../shared/models/activitypub/objects/video-comment-object'
 import { VideoComment } from '../../../shared/models/videos/video-comment.model'
@@ -122,6 +122,9 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
   @UpdatedAt
   updatedAt: Date
 
+  @DeletedAt
+  deletedAt: Date
+
   @AllowNull(false)
   @Is('VideoCommentUrl', value => throwIfNotValid(value, isActivityPubUrlValid, 'url'))
   @Column(DataType.STRING(CONSTRAINTS_FIELDS.VIDEOS.URL.max))
@@ -187,7 +190,8 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
     const query: FindOptions = {
       where: {
         id
-      }
+      },
+      paranoid: false
     }
 
     if (t !== undefined) query.transaction = t
@@ -264,7 +268,8 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
             '(' + buildBlockedAccountSQL(serverAccountId, userAccountId) + ')'
           )
         }
-      }
+      },
+      paranoid: false
     }
 
     const scopes: (string | ScopeOptions)[] = [
@@ -306,7 +311,8 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
             '(' + buildBlockedAccountSQL(serverAccountId, userAccountId) + ')'
           )
         }
-      }
+      },
+      paranoid: false
     }
 
     const scopes: any[] = [
@@ -439,6 +445,10 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
     return this.Account.isOwned()
   }
 
+  isDeleted () {
+    return null !== this.deletedAt
+  }
+
   extractMentions () {
     let result: string[] = []
 
@@ -481,12 +491,14 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
     return {
       id: this.id,
       url: this.url,
-      text: this.text,
+      text: this.isDeleted() ? '' : this.text,
       threadId: this.originCommentId || this.id,
       inReplyToCommentId: this.inReplyToCommentId || null,
       videoId: this.videoId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      deletedAt: this.deletedAt,
+      isDeleted: this.isDeleted(),
       totalReplies: this.get('totalReplies') || 0,
       account: this.Account.toFormattedJSON()
     } as VideoComment

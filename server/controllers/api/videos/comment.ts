@@ -179,7 +179,9 @@ async function removeVideoComment (req: express.Request, res: express.Response) 
   const videoCommentInstance = res.locals.videoCommentFull
 
   await sequelizeTypescript.transaction(async t => {
-    await videoCommentInstance.destroy({ transaction: t })
+    const force = 0 === videoCommentInstance.get('totalReplies')
+
+    await videoCommentInstance.destroy({ transaction: t, force })
 
     if (videoCommentInstance.isOwned() || videoCommentInstance.Video.isOwned()) {
       await sendDeleteVideoComment(videoCommentInstance, t)

@@ -153,10 +153,6 @@ export class VideoCommentsComponent implements OnInit, OnChanges, OnDestroy {
   async onWantedToDelete (commentToDelete: VideoComment) {
     let message = 'Do you really want to delete this comment?'
 
-    if (commentToDelete.totalReplies !== 0) {
-      message += this.i18n(' {{totalReplies}} replies will be deleted too.', { totalReplies: commentToDelete.totalReplies })
-    }
-
     if (commentToDelete.isLocal) {
       message += this.i18n(' The deletion will be sent to remote instances, so they remove the comment too.')
     } else {
@@ -169,6 +165,14 @@ export class VideoCommentsComponent implements OnInit, OnChanges, OnDestroy {
     this.videoCommentService.deleteVideoComment(commentToDelete.videoId, commentToDelete.id)
       .subscribe(
         () => {
+          if (this.highlightedThread && this.highlightedThread.id === commentToDelete.id) this.highlightedThread = undefined
+
+          // Only mark comment as deleted if having replies
+          if (commentToDelete.totalReplies > 0) {
+            this.softDeleteComment(commentToDelete)
+            return
+          }
+
           // Delete the comment in the tree
           if (commentToDelete.inReplyToCommentId) {
             const thread = this.threadComments[commentToDelete.threadId]
@@ -184,8 +188,6 @@ export class VideoCommentsComponent implements OnInit, OnChanges, OnDestroy {
           // Delete the thread
           this.comments = this.comments.filter(c => c.id !== commentToDelete.id)
           this.componentPagination.totalItems--
-
-          if (this.highlightedThread.id === commentToDelete.id) this.highlightedThread = undefined
         },
 
         err => this.notifier.error(err.message)
@@ -202,6 +204,12 @@ export class VideoCommentsComponent implements OnInit, OnChanges, OnDestroy {
     if (hasMoreItems(this.componentPagination)) {
       this.loadMoreThreads()
     }
+  }
+
+  private softDeleteComment (commentToDelete: VideoComment) {
+    commentToDelete.isDeleted = true
+    commentToDelete.deletedAt = new Date()
+    commentToDelete.text = ''
   }
 
   private deleteLocalCommentThread (parentComment: VideoCommentThreadTree, commentToDelete: VideoComment) {
