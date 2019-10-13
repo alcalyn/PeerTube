@@ -212,7 +212,7 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
     return VideoCommentModel.findOne(query)
   }
 
-  static loadByIdAndPopulateVideoAndAccountAndReply (id: number, t?: Transaction): Bluebird<MCommentOwnerVideoReply> {
+  static async loadByIdAndPopulateVideoAndAccountAndReply (id: number, t?: Transaction): Promise<MCommentOwnerVideoReply> {
     const query: FindOptions = {
       where: {
         id
@@ -221,8 +221,18 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
 
     if (t !== undefined) query.transaction = t
 
+    const serverActor = await getServerActor()
+    const serverAccountId = serverActor.Account.id
+
     return VideoCommentModel
-      .scope([ ScopeNames.WITH_VIDEO, ScopeNames.WITH_ACCOUNT, ScopeNames.WITH_IN_REPLY_TO ])
+      .scope([
+        ScopeNames.WITH_VIDEO,
+        ScopeNames.WITH_ACCOUNT,
+        ScopeNames.WITH_IN_REPLY_TO,
+        {
+          method: [ ScopeNames.ATTRIBUTES_FOR_API, serverAccountId ]
+        }
+      ])
       .findOne(query)
   }
 
