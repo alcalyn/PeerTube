@@ -4,7 +4,7 @@ import { VideoCommentCreate } from '../../../../shared/models/videos/video-comme
 import { logger } from '../../../helpers/logger'
 import { getFormattedObjects } from '../../../helpers/utils'
 import { sequelizeTypescript } from '../../../initializers'
-import { buildFormattedCommentTree, createVideoComment } from '../../../lib/video-comment'
+import { buildFormattedCommentTree, createVideoComment, markCommentAsDeleted } from '../../../lib/video-comment'
 import {
   asyncMiddleware,
   asyncRetryTransactionMiddleware,
@@ -178,8 +178,10 @@ async function addVideoCommentReply (req: express.Request, res: express.Response
 async function removeVideoComment (req: express.Request, res: express.Response) {
   const videoCommentInstance = res.locals.videoCommentFull
 
+  markCommentAsDeleted(videoCommentInstance)
+
   await sequelizeTypescript.transaction(async t => {
-    await videoCommentInstance.destroy({ transaction: t })
+    await videoCommentInstance.save()
 
     if (videoCommentInstance.isOwned() || videoCommentInstance.Video.isOwned()) {
       await sendDeleteVideoComment(videoCommentInstance, t)

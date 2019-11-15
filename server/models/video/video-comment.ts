@@ -122,6 +122,10 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
   @UpdatedAt
   updatedAt: Date
 
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  deletedAt: Date
+
   @AllowNull(false)
   @Is('VideoCommentUrl', value => throwIfNotValid(value, isActivityPubUrlValid, 'url'))
   @Column(DataType.STRING(CONSTRAINTS_FIELDS.VIDEOS.URL.max))
@@ -439,6 +443,10 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
     return this.Account.isOwned()
   }
 
+  isDeleted () {
+    return null !== this.deletedAt
+  }
+
   extractMentions () {
     let result: string[] = []
 
@@ -487,8 +495,10 @@ export class VideoCommentModel extends Model<VideoCommentModel> {
       videoId: this.videoId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      deletedAt: this.deletedAt,
+      isDeleted: this.isDeleted(),
       totalReplies: this.get('totalReplies') || 0,
-      account: this.Account.toFormattedJSON()
+      account: this.Account ? this.Account.toFormattedJSON() : null
     } as VideoComment
   }
 
